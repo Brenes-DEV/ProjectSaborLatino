@@ -1,0 +1,6 @@
+@ProjectSaborLatino_HostAddress = http://localhost:5238
+
+GET {{ProjectSaborLatino_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
