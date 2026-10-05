@@ -1,3 +1,15 @@
 <Solution>
-  <Project Path="backendSL/ProjectSaborLatino.csproj" />
+  <Folder Name="/backendSL/">
+    <Project Path="backendSL/ProjectSaborLatino.csproj" />
+  </Folder>
+  <Folder Name="/dbSL/">
+    <File Path="dbSL/README.md" />
+  </Folder>
+  <Folder Name="/frontendSL/">
+    <File Path="frontendSL/README.md" />
+  </Folder>
+  <Folder Name="/Archivos de la raíz/">
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
 </Solution>
