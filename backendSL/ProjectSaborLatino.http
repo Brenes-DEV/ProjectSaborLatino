@@ -27,3 +27,47 @@ Authorization: Bearer {{login.response.body.$.accessToken}}
 
 ### 4. Ver mi perfil sin token (debe dar 401)
 GET {{host}}/api/cuenta/yo
+
+### ================= Catálogo (Fase 1) =================
+
+### 5. Servicios (público, sin token)
+GET {{host}}/api/servicios
+
+### 6. Paquetes con su equipo (público). Filtro opcional: ?servicioId=2
+GET {{host}}/api/paquetes
+
+### 7. Un paquete
+GET {{host}}/api/paquetes/1
+
+### 8. Equipo, galería y preguntas frecuentes (públicos)
+GET {{host}}/api/equipos
+
+###
+GET {{host}}/api/galeria
+
+###
+GET {{host}}/api/preguntas-frecuentes
+
+### 9. Crear sin token (debe dar 401)
+POST {{host}}/api/preguntas-frecuentes
+Content-Type: application/json
+
+{
+  "pregunta": "¿Prueba?",
+  "respuesta": "Prueba"
+}
+
+### 10. Crear una pregunta frecuente como Superadmin (ejecuta antes la petición 2)
+POST {{host}}/api/preguntas-frecuentes
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "pregunta": "¿Con cuánta anticipación debo reservar?",
+  "respuesta": "Escriba aquí la respuesta real del negocio.",
+  "orden": 1
+}
+
+### 11. Ver también los inactivos (solo funciona con token de admin)
+GET {{host}}/api/servicios?incluirInactivos=true
+Authorization: Bearer {{login.response.body.$.accessToken}}

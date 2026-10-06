@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectSaborLatino.Data;
 using ProjectSaborLatino.Models;
+using ProjectSaborLatino.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,13 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddAuthorization();
+
+// Services del catálogo (Fase 1)
+builder.Services.AddScoped<IServicioService, ServicioService>();
+builder.Services.AddScoped<IPaqueteService, PaqueteService>();
+builder.Services.AddScoped<IEquipoService, EquipoService>();
+builder.Services.AddScoped<IImagenGaleriaService, ImagenGaleriaService>();
+builder.Services.AddScoped<IPreguntaFrecuenteService, PreguntaFrecuenteService>();
 
 // CORS para el frontend React
 const string PoliticaFrontend = "Frontend";

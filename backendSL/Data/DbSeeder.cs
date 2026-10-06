@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using ProjectSaborLatino.Models;
 
 namespace ProjectSaborLatino.Data;
 
-// Crea los 4 roles y el primer Superadministrador al iniciar la API. No duplica nada.
+// Crea el catálogo inicial, los 4 roles y el primer Superadministrador al iniciar la API. No duplica nada.
 public static class DbSeeder
 {
     public static async Task SembrarAsync(IServiceProvider services)
@@ -13,6 +14,10 @@ public static class DbSeeder
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbSeeder");
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // 0. Catálogo inicial (Fase 1)
+        await SembrarCatalogoAsync(db, logger);
 
         // 1. Roles
         foreach (var rol in Roles.Todos)
@@ -56,5 +61,99 @@ public static class DbSeeder
 
         await userManager.AddToRoleAsync(superAdmin, Roles.Superadministrador);
         logger.LogInformation("Superadministrador creado: {Email}", email);
+    }
+
+    // Servicios, equipo y los 4 paquetes iniciales. Solo se cargan si no hay ningún servicio.
+    // Los precios son de ejemplo; el admin los ajusta desde el API.
+    private static async Task SembrarCatalogoAsync(ApplicationDbContext db, ILogger logger)
+    {
+        if (await db.Servicios.AnyAsync())
+        {
+            return;
+        }
+
+        var karaoke = new Servicio
+        {
+            Nombre = "Karaoke",
+            Descripcion = "Karaoke con pantalla, micrófonos y música para bailar."
+        };
+        var musicaEnVivo = new Servicio
+        {
+            Nombre = "Música en vivo",
+            Descripcion = "Grupos musicales para animar su evento."
+        };
+        var sonido = new Servicio
+        {
+            Nombre = "Sonido",
+            Descripcion = "Equipo de sonido y técnico para grupos y eventos."
+        };
+
+        var parlante = new Equipo { Nombre = "Parlante activo", Tipo = "Audio", CantidadTotal = 6 };
+        var microfono = new Equipo { Nombre = "Micrófono inalámbrico", Tipo = "Audio", CantidadTotal = 8 };
+        var consola = new Equipo { Nombre = "Consola de sonido", Tipo = "Audio", CantidadTotal = 2 };
+        var monitor = new Equipo { Nombre = "Monitor de escenario", Tipo = "Audio", CantidadTotal = 4 };
+        var pantalla = new Equipo { Nombre = "Pantalla para karaoke", Tipo = "Video", CantidadTotal = 2 };
+        var luces = new Equipo { Nombre = "Luces de ambiente", Tipo = "Iluminación", CantidadTotal = 8 };
+
+        db.Paquetes.AddRange(
+            new Paquete
+            {
+                Servicio = karaoke,
+                Nombre = "Karaoke bailable",
+                Descripcion = "Karaoke con pantalla y música bailable entre canciones.",
+                PrecioBase = 120000m,
+                Equipos =
+                [
+                    new PaqueteEquipo { Equipo = parlante, Cantidad = 2 },
+                    new PaqueteEquipo { Equipo = microfono, Cantidad = 2 },
+                    new PaqueteEquipo { Equipo = pantalla, Cantidad = 1 },
+                    new PaqueteEquipo { Equipo = luces, Cantidad = 2 }
+                ]
+            },
+            new Paquete
+            {
+                Servicio = musicaEnVivo,
+                Nombre = "Grupo secuenciado",
+                Descripcion = "Grupo que canta en vivo sobre pistas secuenciadas.",
+                PrecioBase = 250000m,
+                Equipos =
+                [
+                    new PaqueteEquipo { Equipo = parlante, Cantidad = 2 },
+                    new PaqueteEquipo { Equipo = microfono, Cantidad = 3 },
+                    new PaqueteEquipo { Equipo = consola, Cantidad = 1 },
+                    new PaqueteEquipo { Equipo = luces, Cantidad = 4 }
+                ]
+            },
+            new Paquete
+            {
+                Servicio = musicaEnVivo,
+                Nombre = "Grupo en vivo (marimba u orquesta)",
+                Descripcion = "Marimba u orquesta completa tocando en vivo.",
+                PrecioBase = 450000m,
+                Equipos =
+                [
+                    new PaqueteEquipo { Equipo = parlante, Cantidad = 4 },
+                    new PaqueteEquipo { Equipo = microfono, Cantidad = 6 },
+                    new PaqueteEquipo { Equipo = consola, Cantidad = 1 },
+                    new PaqueteEquipo { Equipo = monitor, Cantidad = 2 },
+                    new PaqueteEquipo { Equipo = luces, Cantidad = 6 }
+                ]
+            },
+            new Paquete
+            {
+                Servicio = sonido,
+                Nombre = "Sonorización para grupos en vivo",
+                Descripcion = "Equipo de sonido y técnico para el grupo que usted contrate.",
+                PrecioBase = 180000m,
+                Equipos =
+                [
+                    new PaqueteEquipo { Equipo = parlante, Cantidad = 4 },
+                    new PaqueteEquipo { Equipo = consola, Cantidad = 1 },
+                    new PaqueteEquipo { Equipo = monitor, Cantidad = 4 }
+                ]
+            });
+
+        await db.SaveChangesAsync();
+        logger.LogInformation("Catálogo inicial creado: 3 servicios, 6 equipos y 4 paquetes.");
     }
 }
