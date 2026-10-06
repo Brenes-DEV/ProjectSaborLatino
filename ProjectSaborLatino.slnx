@@ -6,7 +6,10 @@
     <File Path="dbSL/README.md" />
   </Folder>
   <Folder Name="/frontendSL/">
-    <File Path="frontendSL/README.md" />
+    <Project Path="frontendSL/frontendsl.esproj">
+      <Build />
+      <Deploy />
+    </Project>
   </Folder>
   <Folder Name="/Archivos de la raíz/">
     <File Path=".gitignore" />
