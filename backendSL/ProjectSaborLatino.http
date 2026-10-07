@@ -71,3 +71,68 @@ Content-Type: application/json
 ### 11. Ver también los inactivos (solo funciona con token de admin)
 GET {{host}}/api/servicios?incluirInactivos=true
 Authorization: Bearer {{login.response.body.$.accessToken}}
+
+
+### ================= Solicitudes y cotizaciones (Fase 2) =================
+# Ejecuta antes la petición 2 (login del Superadmin) para tener el token
+
+### 12. Visitante (sin token) pide una cotización → 201
+# @name solicitud
+POST {{host}}/api/solicitudes
+Content-Type: application/json
+
+{
+  "nombreContacto": "Visitante de Prueba",
+  "correoContacto": "visitante@prueba.com",
+  "telefonoContacto": "88887777",
+  "paqueteId": 1,
+  "tipoEvento": "Boda",
+  "fechaEvento": "2027-03-15T18:00:00",
+  "lugar": "Salón de eventos, Heredia",
+  "cantidadInvitados": 120,
+  "comentarios": "Prueba desde el archivo .http"
+}
+
+### 13. Fecha del evento en el pasado → 400
+POST {{host}}/api/solicitudes
+Content-Type: application/json
+
+{
+  "nombreContacto": "Visitante de Prueba",
+  "correoContacto": "visitante@prueba.com",
+  "tipoEvento": "Boda",
+  "fechaEvento": "2020-01-01T18:00:00",
+  "lugar": "Heredia"
+}
+
+### 14. Listar solicitudes sin token → 401
+GET {{host}}/api/solicitudes
+
+### 15. Listar solicitudes como Superadmin → 200 (filtro opcional: ?estado=Pendiente)
+GET {{host}}/api/solicitudes
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 16. Crear una cotización para la solicitud de la petición 12 → 201 (la solicitud pasa a Cotizada)
+# @name cotizacion
+POST {{host}}/api/solicitudes/{{solicitud.response.body.$.id}}/cotizaciones
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "monto": 150000,
+  "descuento": 10000,
+  "detalle": "Incluye 5 horas de karaoke",
+  "vigenteHasta": "2027-01-31T23:59:00"
+}
+
+### 17. Aceptar la cotización → 200 (la solicitud pasa a Aceptada)
+PATCH {{host}}/api/cotizaciones/{{cotizacion.response.body.$.id}}/aceptar
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 18. Aceptarla otra vez → 400
+PATCH {{host}}/api/cotizaciones/{{cotizacion.response.body.$.id}}/aceptar
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 19. Ver la solicitud con sus cotizaciones
+GET {{host}}/api/solicitudes/{{solicitud.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.accessToken}}

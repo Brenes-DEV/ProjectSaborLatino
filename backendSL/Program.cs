@@ -38,6 +38,10 @@ builder.Services.AddScoped<IEquipoService, EquipoService>();
 builder.Services.AddScoped<IImagenGaleriaService, ImagenGaleriaService>();
 builder.Services.AddScoped<IPreguntaFrecuenteService, PreguntaFrecuenteService>();
 
+// Services de solicitudes y cotizaciones (Fase 2)
+builder.Services.AddScoped<ISolicitudService, SolicitudService>();
+builder.Services.AddScoped<ICotizacionService, CotizacionService>();
+
 // CORS para el frontend React
 const string PoliticaFrontend = "Frontend";
 var origenesPermitidos = builder.Configuration
