@@ -17,8 +17,13 @@ builder.Services.AddProblemDetails();
 // Base de datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+// La bitácora automática necesita saber qué usuario hace cada petición
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<BitacoraInterceptor>();
+
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(sp.GetRequiredService<BitacoraInterceptor>()));
 
 // Identity: usuarios, roles y login con token
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
@@ -45,6 +50,12 @@ builder.Services.AddScoped<ICotizacionService, CotizacionService>();
 // Services de eventos (Fase 3)
 builder.Services.AddScoped<IEmpleadoService, EmpleadoService>();
 builder.Services.AddScoped<IEventoService, EventoService>();
+
+// Services de usuarios y sistema (Fase 4)
+builder.Services.AddScoped<IBitacoraService, BitacoraService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IConfiguracionService, ConfiguracionService>();
+builder.Services.AddScoped<IReporteService, ReporteService>();
 
 // CORS para el frontend React
 const string PoliticaFrontend = "Frontend";

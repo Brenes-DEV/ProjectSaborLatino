@@ -290,3 +290,133 @@ Content-Type: application/json
 {
   "motivo": "Prueba de cancelación"
 }
+
+
+### ================= Usuarios y sistema (Fase 4) =================
+# Ejecuta antes la petición 2 (login del Superadmin) para tener el token
+
+### 40. Listar usuarios (Superadmin ve todos; filtros: ?rol=Trabajador&incluirInactivos=true) → 200
+GET {{host}}/api/usuarios
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 41. Crear un usuario Trabajador (clave de prueba) → 201
+# @name usuarioNuevo
+POST {{host}}/api/usuarios
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "email": "trabajador@prueba.com",
+  "password": "Trabajador123!",
+  "nombreCompleto": "Trabajador de Prueba",
+  "telefono": "88882222",
+  "rol": "Trabajador"
+}
+
+### 42. Rol que no existe → 400
+POST {{host}}/api/usuarios
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "email": "otro@prueba.com",
+  "password": "Trabajador123!",
+  "nombreCompleto": "Otro",
+  "rol": "Jefe"
+}
+
+### 43. Cambiar el rol a Cliente → 200
+PATCH {{host}}/api/usuarios/{{usuarioNuevo.response.body.$.id}}/rol
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "rol": "Cliente"
+}
+
+### 44. Desactivar el usuario → 200
+PATCH {{host}}/api/usuarios/{{usuarioNuevo.response.body.$.id}}/activo
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+### 45. El usuario desactivado intenta iniciar sesión → 401
+POST {{host}}/api/identity/login
+Content-Type: application/json
+
+{
+  "email": "trabajador@prueba.com",
+  "password": "Trabajador123!"
+}
+
+### 46. Reactivar el usuario → 200
+PATCH {{host}}/api/usuarios/{{usuarioNuevo.response.body.$.id}}/activo
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### 47. Ver la configuración (solo Superadmin) → 200
+GET {{host}}/api/configuracion
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 48. Cambiar los eventos mínimos para fidelidad → 200
+PUT {{host}}/api/configuracion/Fidelidad.EventosMinimos
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "valor": "5"
+}
+
+### 49. Valor no válido → 400
+PUT {{host}}/api/configuracion/Fidelidad.PorcentajeDescuento
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "valor": "150"
+}
+
+### 50. Volver a dejar los eventos mínimos en 3 → 200
+PUT {{host}}/api/configuracion/Fidelidad.EventosMinimos
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "valor": "3"
+}
+
+### 51. Solicitud de prueba para consultar la fidelidad → 201
+# @name solicitudFidelidad
+POST {{host}}/api/solicitudes
+Content-Type: application/json
+
+{
+  "nombreContacto": "Visitante Fidelidad",
+  "correoContacto": "fidelidad@prueba.com",
+  "paqueteId": 1,
+  "tipoEvento": "Cumpleaños",
+  "fechaEvento": "2027-07-10T19:00:00",
+  "lugar": "Heredia"
+}
+
+### 52. ¿Aplica el descuento por fidelidad? (un visitante nunca aplica) → 200
+GET {{host}}/api/solicitudes/{{solicitudFidelidad.response.body.$.id}}/fidelidad
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 53. Resumen del mes (por defecto el actual; también ?anio=2027&mes=7) → 200
+GET {{host}}/api/reportes/resumen
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 54. Bitácora (filtros: desde, hasta, usuarioId, entidad=Usuario) → 200
+GET {{host}}/api/bitacora
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 55. Bitácora sin token → 401
+GET {{host}}/api/bitacora

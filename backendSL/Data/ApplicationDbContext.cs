@@ -34,6 +34,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<EventoTrabajador> EventosTrabajadores => Set<EventoTrabajador>();
     public DbSet<EventoHistorialEstado> EventosHistorialEstados => Set<EventoHistorialEstado>();
 
+    // =============== Usuarios y sistema (Fase 4) ===============
+
+    public DbSet<Configuracion> Configuraciones => Set<Configuracion>();
+    public DbSet<Bitacora> Bitacora => Set<Bitacora>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // Identity necesita configurar sus propias tablas primero
@@ -150,5 +155,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(x => x.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // La bitácora se consulta casi siempre por fecha
+        builder.Entity<Bitacora>().HasIndex(x => x.Fecha);
     }
 }

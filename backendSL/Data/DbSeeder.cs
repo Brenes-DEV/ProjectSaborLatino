@@ -19,6 +19,9 @@ public static class DbSeeder
         // 0. Catálogo inicial (Fase 1)
         await SembrarCatalogoAsync(db, logger);
 
+        // 0b. Parámetros del sistema (Fase 4)
+        await SembrarConfiguracionAsync(db);
+
         // 1. Roles
         foreach (var rol in Roles.Todos)
         {
@@ -65,6 +68,36 @@ public static class DbSeeder
 
     // Servicios, equipo y los 4 paquetes iniciales. Solo se cargan si no hay ningún servicio.
     // Los precios son de ejemplo; el admin los ajusta desde el API.
+    // Agrega los parámetros que falten; nunca pisa un valor que el Superadministrador ya cambió
+    private static async Task SembrarConfiguracionAsync(ApplicationDbContext db)
+    {
+        var parametros = new[]
+        {
+            new Configuracion
+            {
+                Clave = "Fidelidad.EventosMinimos",
+                Valor = "3",
+                Descripcion = "Eventos finalizados que necesita un cliente para recibir el descuento por fidelidad."
+            },
+            new Configuracion
+            {
+                Clave = "Fidelidad.PorcentajeDescuento",
+                Valor = "10",
+                Descripcion = "Porcentaje de descuento por fidelidad (de 0 a 100)."
+            }
+        };
+
+        foreach (var p in parametros)
+        {
+            if (!await db.Configuraciones.AnyAsync(c => c.Clave == p.Clave))
+            {
+                db.Configuraciones.Add(p);
+            }
+        }
+
+        await db.SaveChangesAsync();
+    }
+
     private static async Task SembrarCatalogoAsync(ApplicationDbContext db, ILogger logger)
     {
         if (await db.Servicios.AnyAsync())
