@@ -42,6 +42,10 @@ builder.Services.AddScoped<IPreguntaFrecuenteService, PreguntaFrecuenteService>(
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 builder.Services.AddScoped<ICotizacionService, CotizacionService>();
 
+// Services de eventos (Fase 3)
+builder.Services.AddScoped<IEmpleadoService, EmpleadoService>();
+builder.Services.AddScoped<IEventoService, EventoService>();
+
 // CORS para el frontend React
 const string PoliticaFrontend = "Frontend";
 var origenesPermitidos = builder.Configuration

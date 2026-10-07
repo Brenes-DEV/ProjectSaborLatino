@@ -136,3 +136,157 @@ Authorization: Bearer {{login.response.body.$.accessToken}}
 ### 19. Ver la solicitud con sus cotizaciones
 GET {{host}}/api/solicitudes/{{solicitud.response.body.$.id}}
 Authorization: Bearer {{login.response.body.$.accessToken}}
+
+
+### ================= Eventos (Fase 3) =================
+# Ejecuta antes la petición 2 (login del Superadmin) para tener el token
+
+### 20. Solicitud de un visitante para el evento → 201
+# @name solicitudEvento
+POST {{host}}/api/solicitudes
+Content-Type: application/json
+
+{
+  "nombreContacto": "Cliente del Evento",
+  "correoContacto": "evento@prueba.com",
+  "paqueteId": 1,
+  "tipoEvento": "Quince años",
+  "fechaEvento": "2027-05-20T19:00:00",
+  "lugar": "Salón comunal, Alajuela",
+  "cantidadInvitados": 80
+}
+
+### 21. Cotización para esa solicitud → 201
+# @name cotizacionEvento
+POST {{host}}/api/solicitudes/{{solicitudEvento.response.body.$.id}}/cotizaciones
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "monto": 120000,
+  "vigenteHasta": "2027-04-30T23:59:00"
+}
+
+### 22. Aceptar la cotización → 200
+PATCH {{host}}/api/cotizaciones/{{cotizacionEvento.response.body.$.id}}/aceptar
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 23. Crear el evento (copia el equipo del paquete) → 201
+# @name evento
+POST {{host}}/api/eventos
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "cotizacionId": {{cotizacionEvento.response.body.$.id}},
+  "fechaInicio": "2027-05-20T18:00:00",
+  "fechaFin": "2027-05-20T23:30:00",
+  "notas": "Llegar 2 horas antes para el montaje",
+  "copiarEquipoDelPaquete": true
+}
+
+### 24. Crear otro evento con la misma cotización → 400
+POST {{host}}/api/eventos
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "cotizacionId": {{cotizacionEvento.response.body.$.id}},
+  "fechaInicio": "2027-05-20T18:00:00",
+  "fechaFin": "2027-05-20T23:30:00"
+}
+
+### 25. Disponibilidad de equipo en ese horario → 200
+GET {{host}}/api/equipos/disponibilidad?desde=2027-05-20T18:00:00&hasta=2027-05-20T23:30:00
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 26. Crear un empleado → 201
+# @name empleado
+POST {{host}}/api/empleados
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "cedula": "1-1111-1111",
+  "nombreCompleto": "Empleado de Prueba",
+  "puesto": "Técnico de sonido",
+  "telefono": "88880000"
+}
+
+### 27. Empleado con la misma cédula → 400
+POST {{host}}/api/empleados
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "cedula": "1-1111-1111",
+  "nombreCompleto": "Otro Empleado",
+  "puesto": "Montaje"
+}
+
+### 28. Asignar el empleado al evento → 200
+PUT {{host}}/api/eventos/{{evento.response.body.$.id}}/trabajadores
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+[
+  { "empleadoId": {{empleado.response.body.$.id}}, "funcion": "Sonido" }
+]
+
+### 29. Cambiar el equipo del evento (reemplaza todo) → 200
+PUT {{host}}/api/eventos/{{evento.response.body.$.id}}/equipos
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+[
+  { "equipoId": 1, "cantidad": 2 },
+  { "equipoId": 2, "cantidad": 3 }
+]
+
+### 30. Pedir más equipo del que hay (6 parlantes en total) → 400
+PUT {{host}}/api/eventos/{{evento.response.body.$.id}}/equipos
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+[
+  { "equipoId": 1, "cantidad": 10 }
+]
+
+### 31. Avanzar a EnMontaje → 200
+PATCH {{host}}/api/eventos/{{evento.response.body.$.id}}/estado
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "estado": "EnMontaje",
+  "comentario": "El equipo ya llegó"
+}
+
+### 32. Saltar a Finalizado → 400 (solo se puede pasar a EnServicio)
+PATCH {{host}}/api/eventos/{{evento.response.body.$.id}}/estado
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "estado": "Finalizado"
+}
+
+### 33. Ver el evento con equipo, trabajadores e historial → 200
+GET {{host}}/api/eventos/{{evento.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 34. Listar eventos (filtros opcionales: desde, hasta, estado, clienteId, paqueteId) → 200
+GET {{host}}/api/eventos?estado=EnMontaje
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### 35. Listar eventos sin token → 401
+GET {{host}}/api/eventos
+
+### 36. Cancelar el evento con motivo → 200
+PATCH {{host}}/api/eventos/{{evento.response.body.$.id}}/cancelar
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "motivo": "Prueba de cancelación"
+}
